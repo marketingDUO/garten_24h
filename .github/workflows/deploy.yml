@@ -17,14 +17,33 @@ jobs:
       - name: Website laden
         uses: actions/checkout@v4
 
+      - name: SFTP-Werkzeug vorbereiten
+        run: sudo apt-get update && sudo apt-get install -y sshpass
+
       - name: Fertige Website per SFTP veröffentlichen
-        uses: wlixcc/SFTP-Deploy-Action@v1.2.6
-        with:
-          server: ${{ secrets.HETZNER_HOST }}
-          username: ${{ secrets.HETZNER_USER }}
-          password: ${{ secrets.HETZNER_PASSWORD }}
-          port: ${{ secrets.HETZNER_PORT }}
-          local_path: ./dist/*
-          remote_path: ./
-          sftp_only: true
-          delete_remote_files: false
+        shell: bash
+        env:
+          HETZNER_HOST: ${{ secrets.HETZNER_HOST }}
+          HETZNER_USER: ${{ secrets.HETZNER_USER }}
+          HETZNER_PORT: ${{ secrets.HETZNER_PORT }}
+          SSHPASS: ${{ secrets.HETZNER_PASSWORD }}
+        run: |
+          set -euo pipefail
+          SFTP_BATCH="$(mktemp)"
+
+          find dist -mindepth 1 -type d -printf '%P\n' \
+            | sort \
+            | awk '{ print "-mkdir \"" $0 "\"" }' > "$SFTP_BATCH"
+
+          find dist -type f -printf '%P\n' \
+            | sort \
+            | awk '{ print "put \"dist/" $0 "\" \"" $0 "\"" }' >> "$SFTP_BATCH"
+
+          printf 'bye\n' >> "$SFTP_BATCH"
+
+          sshpass -e sftp \
+            -oBatchMode=no \
+            -oStrictHostKeyChecking=no \
+            -P "$HETZNER_PORT" \
+            -b "$SFTP_BATCH" \
+            "$HETZNER_USER@$HETZNER_HOST"
