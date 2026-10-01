@@ -1,9 +1,48 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-const root='/workspace/sites/garten24h-relaunch/dist';
+const root=path.resolve('dist');
 const origin='https://www.garten24h.de';
 fs.mkdirSync(root,{recursive:true});
+
+const imageMap={
+ '/assets/original/hero-garden.jpeg':['/assets/optimized/hero-garden.webp',1400,700,'/assets/optimized/hero-garden-800.webp 800w, /assets/optimized/hero-garden.webp 1400w'],
+ '/assets/original/irrigation-hero.jpeg':['/assets/optimized/irrigation-hero.webp',1000,611,'/assets/optimized/irrigation-hero-800.webp 800w, /assets/optimized/irrigation-hero.webp 1000w'],
+ '/assets/original/pool-hero.jpeg':['/assets/optimized/pool-hero.webp',1000,663,'/assets/optimized/pool-hero-800.webp 800w, /assets/optimized/pool-hero.webp 1000w'],
+ '/assets/original/irrigation-project-1.jpg':['/assets/optimized/irrigation-project-1.webp',1000,750],
+ '/assets/original/irrigation-project-2.jpg':['/assets/optimized/irrigation-project-2.webp',1000,750],
+ '/assets/original/irrigation-project-3.jpg':['/assets/optimized/irrigation-project-3.webp',1000,750,'/assets/optimized/irrigation-project-3-800.webp 800w, /assets/optimized/irrigation-project-3.webp 1000w'],
+ '/assets/original/irrigation-project-4.jpg':['/assets/optimized/irrigation-project-4.webp',768,576],
+ '/assets/original/pool-project-1.jpeg':['/assets/optimized/pool-project-1.webp',1000,750],
+ '/assets/original/pool-project-2.jpg':['/assets/optimized/pool-project-2.webp',1000,750,'/assets/optimized/pool-project-2-800.webp 800w, /assets/optimized/pool-project-2.webp 1000w'],
+ '/assets/original/pool-project-3.jpeg':['/assets/optimized/pool-project-3.webp',750,1000],
+ '/assets/original/project-garden.JPG':['/assets/optimized/project-garden.webp',750,1000],
+ '/assets/original/store-1.JPG':['/assets/optimized/store-1.webp',1000,750],
+ '/assets/original/store-2.jpg':['/assets/optimized/store-2.webp',750,1000],
+ '/assets/original/store-3.jpg':['/assets/optimized/store-3.webp',750,1000],
+ '/assets/original/store-hero.jpeg':['/assets/optimized/store-hero.webp',1400,422],
+ '/assets/original/logo.svg':['/assets/original/logo.svg',625,189],
+ '/assets/original/hunter-logo.png':['/assets/original/hunter-logo.png',1024,243],
+ '/assets/original/rainbird-logo.png':['/assets/original/rainbird-logo.png',1024,243],
+ '/assets/cavator-white.png':['/assets/cavator-white.png',2048,452]
+};
+const inlineCss=`${fs.readFileSync(path.join(root,'styles.css'),'utf8')}\n${fs.readFileSync(path.join(root,'refresh.css'),'utf8')}`.replace(/\s+/g,' ').trim();
+
+function optimizeImages(markup){
+ for(const [original,[optimized]] of Object.entries(imageMap))markup=markup.replaceAll(original,optimized);
+ markup=markup
+  .replace(/(<section class="hero newhero">[\s\S]*?<img )/, '$1fetchpriority="high" ')
+  .replace(/(<section class="g24-pagehero">[\s\S]*?<img )/, '$1fetchpriority="high" ')
+  .replace(/(<section class="funnelhero">[\s\S]*?<img )/, '$1fetchpriority="high" ');
+ return markup.replace(/<img\s+([^>]*src="([^"]+)"[^>]*)>/g,(tag,attrs,src)=>{
+  const meta=Object.values(imageMap).find(([optimized])=>optimized===src);
+  if(!meta)return tag;
+  const [,width,height,srcset]=meta;
+  const priority=attrs.includes('fetchpriority="high"');
+  const responsive=srcset?` srcset="${srcset}" sizes="${priority?'100vw':'(max-width: 900px) 92vw, 50vw'}"`:'';
+  return `<img ${attrs} width="${width}" height="${height}" decoding="async"${priority?'':' loading="lazy"'}${responsive}>`;
+ });
+}
 
 const raw=[
 ['nord','Oranienburg','oranienburg','Lehnitz, Sachsenhausen und Zehlendorf'],['nord','Wandlitz','wandlitz','Basdorf, Klosterfelde und Stolzenhagen'],['nord','Basdorf','basdorf','Schönwalde, Wandlitz und Schönerlinde'],['nord','Klosterfelde','klosterfelde','Wandlitz, Stolzenhagen und Zerpenschleuse'],['nord','Schönwalde','schoenwalde-wandlitz','Basdorf, Schönerlinde und Mühlenbeck'],['nord','Schönerlinde','schoenerlinde','Schönwalde, Buch und Mühlenbeck'],['nord','Stolzenhagen','stolzenhagen','Wandlitz, Klosterfelde und Zühlsdorf'],['nord','Zühlsdorf','zuehlsdorf','Mühlenbeck, Wandlitz und Birkenwerder'],['nord','Mühlenbeck','muehlenbeck','Schildow, Schönfließ und Zühlsdorf'],['nord','Schildow','schildow','Glienicke, Mühlenbeck und Berlin-Pankow'],['nord','Schönfließ','schoenfliess','Glienicke, Schildow und Hohen Neuendorf'],['nord','Hohen Neuendorf','hohen-neuendorf','Bergfelde, Borgsdorf und Stolpe'],['nord','Bergfelde','bergfelde','Schönfließ, Hohen Neuendorf und Birkenwerder'],['nord','Borgsdorf','borgsdorf','Birkenwerder, Hohen Neuendorf und Oranienburg'],['nord','Birkenwerder','birkenwerder','Borgsdorf, Hohen Neuendorf und Zühlsdorf'],['nord','Glienicke/Nordbahn','glienicke-nordbahn','Schildow, Hermsdorf und Schönfließ'],['nord','Hennigsdorf','hennigsdorf','Nieder Neuendorf, Stolpe und Velten'],['nord','Velten','velten','Hennigsdorf, Leegebruch und Oberkrämer'],['nord','Leegebruch','leegebruch','Oranienburg, Velten und Oberkrämer'],['nord','Oberkrämer','oberkraemer','Bötzow, Marwitz, Vehlefanz und Schwante'],['nord','Bötzow','boetzow','Marwitz, Velten und Hennigsdorf'],['nord','Marwitz','marwitz','Bötzow, Eichstädt und Velten'],['nord','Vehlefanz','vehlefanz','Schwante, Bärenklau und Neu-Vehlefanz'],['nord','Schwante','schwante','Vehlefanz, Sommerswalde und Kremmen'],['nord','Bernau bei Berlin','bernau','Schönow, Ladeburg und Börnicke'],['nord','Schönow','schoenow','Bernau, Zepernick und Ladeburg'],['nord','Ladeburg','ladeburg','Bernau, Lobetal und Börnicke'],['nord','Panketal','panketal','Zepernick und Schwanebeck'],
@@ -23,7 +62,7 @@ const bread=items=>({'@context':'https://schema.org','@type':'BreadcrumbList',it
 function head(){return `<a class="skip" href="#content">Zum Inhalt</a><header class="g24-header"><div class="g24-top"><span>Bewässerung · Poolbau · Gartentechnik</span><span><a href="/ladengeschaeft">Mädewalder Weg 2 · 12621 Berlin</a><i></i><a href="tel:+493055283241">030 552 83 241</a></span></div><div class="g24-nav"><a class="real-logo" href="/" aria-label="Garten24h Startseite"><img src="/assets/original/logo.svg" alt="Garten24h – Die Profis für Ihren modernen Garten"></a><button class="menubtn" aria-expanded="false" aria-controls="nav">Menü</button><nav id="nav"><a href="/">Start</a><a href="/bewaesserung">Bewässerung</a><a href="/Poolbau">Poolbau</a><div class="navgroup"><button aria-expanded="false">Leistungen <span>⌄</span></button><div class="dropdown"><a href="/leistungen">Alle Leistungen</a><a href="/zisterne">Zisterne</a><a href="/maehroboter">Mähroboter</a><a href="/rollrasen">Rollrasen</a><a href="/baumarbeiten">Baumarbeiten</a><a href="/wartung">Wartung</a></div></div><a href="/ladengeschaeft">Ladengeschäft</a><a href="/news">Gartenwissen</a><a href="https://garten24.shop/">Shop</a><a class="header-phone" href="tel:+493055283241"><small>Direkt anrufen</small><strong>030 552 83 241</strong></a><a class="navcta" href="/kontakt">Projekt anfragen <span>↗</span></a></nav></div></header>`;}
 function directory(){return `<details class="region-directory"><summary><span><small>Einsatzgebiet Berlin & Brandenburg</small><strong>Hier sind wir für Sie tätig</strong></span><b>Alle Orte +</b></summary><p>Regionale Fachseiten für Bewässerungsanlagen und Poolbau. Größere Orte finden Sie zusätzlich auf der Einsatzgebietskarte.</p><div>${Object.entries(zoneNames).map(([z,label])=>`<section><h3>${label}</h3>${places.filter(p=>p.zone===z).map(p=>`<article><strong>${esc(p.name)}</strong><a href="/bewaesserungsanlage-${p.slug}">Bewässerung</a><a href="/poolbau-${p.slug}">Poolbau</a></article>`).join('')}</section>`).join('')}</div></details>`;}
 function foot(){return `<footer>${directory()}<div class="footergrid"><div><img class="footer-logo" src="/assets/original/logo.svg" alt="Garten24h"><p>Fachplanung, Installation, Ladengeschäft und Service für moderne Gärten.</p></div><div><h3>Schwerpunkte</h3><a href="/bewaesserung">Bewässerungsanlagen</a><a href="/Poolbau">Poolbau</a><a href="/ladengeschaeft">Ladengeschäft</a><a href="/news">Gartenwissen</a></div><div><h3>Kontakt</h3><p>Mädewalder Weg 2<br>12621 Berlin</p><a href="tel:+493055283241">030 552 83 241</a><a href="mailto:info@garten24h.de">info@garten24h.de</a></div><div><h3>Direkt</h3><a href="/kontakt">Projekt anfragen</a><a href="https://garten24.shop/">Onlineshop</a><a href="/faq">FAQ</a><a href="/download">Downloads</a></div></div><div class="cavator"><img src="/assets/cavator-white.png" alt="Cavator – Wir bewegen Erde"><span>Ein Unternehmen der Cavator Gruppe.</span></div><div class="legal"><span>© 2026 Garten24 H&S GmbH</span><span><a href="/impressum">Impressum</a><a href="/datenschutz">Datenschutz</a></span></div></footer>`;}
-function shell({title,desc,canonical,body,schemas=[]}){return `<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><meta name="description" content="${esc(desc)}"><link rel="canonical" href="${origin}${canonical}"><link rel="icon" href="/assets/original/favicon.png"><meta name="theme-color" content="#123a2a"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}"><meta property="og:image" content="${origin}/assets/original/hero-garden.jpeg"><link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/refresh.css"><script type="application/ld+json">${j(business())}</script>${schemas.map(x=>`<script type="application/ld+json">${j(x)}</script>`).join('')}</head><body>${head()}<main id="content">${body}</main>${foot()}<script src="/site.js"></script></body></html>`;}
+function shell({title,desc,canonical,body,schemas=[]}){return optimizeImages(`<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><meta name="description" content="${esc(desc)}"><link rel="canonical" href="${origin}${canonical}"><link rel="icon" href="/assets/original/favicon.png"><meta name="theme-color" content="#123a2a"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}"><meta property="og:image" content="${origin}/assets/optimized/hero-garden.webp"><style>${inlineCss}</style><script type="application/ld+json">${j(business())}</script>${schemas.map(x=>`<script type="application/ld+json">${j(x)}</script>`).join('')}</head><body>${head()}<main id="content">${body}</main>${foot()}<script defer src="/site.js"></script></body></html>`);}
 const btn=(url='/kontakt',text='Kostenlose Erstberatung')=>`<a class="btn primary" href="${url}">${text}<span>↗</span></a>`;
 const faq=items=>`<div class="faq">${items.map(([q,a],i)=>`<details${i?'':' open'}><summary>${esc(q)}<span>+</span></summary><p>${esc(a)}</p></details>`).join('')}</div>`;
 

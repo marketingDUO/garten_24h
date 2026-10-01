@@ -26,3 +26,6 @@ body{color:var(--ink);background:#fbfcf8}.g24-header{position:relative;z-index:3
 @media(max-width:1150px){.g24-nav nav{font-size:.93rem}.g24-nav nav>a,.g24-nav nav button{font-size:.93rem}.home-trust{grid-template-columns:1.35fr repeat(3,1fr)}}
 @media(max-width:900px){.home-trust{grid-template-columns:1fr 1fr}.home-trust div:nth-child(odd){border-left:0}.home-intro,.home-focus-head,.home-store,.home-final{grid-template-columns:1fr}.home-benefits{grid-template-columns:1fr}.home-focus-action{align-items:flex-start;flex-direction:column}.home-store>img{min-height:420px}.home-final{align-items:start}}
 @media(max-width:560px){.home-trust b{font-size:1.05rem}.home-trust span{font-size:.72rem}.home-intro{gap:2rem}.home-focus-action .btn{white-space:normal}.home-store{border-radius:18px}.home-store>img{min-height:320px}.home-store>div{padding:2.2rem 1.4rem}.home-final{border-radius:18px}.home-final h2{font-size:2.65rem}}
+
+/* PageSpeed accessibility: readable secondary copy on light surfaces */
+.eyebrow:not(.light),.featuregrid span,.storecards span{color:#356d2e}.trustbar span,.article small,.contactfacts small,.formnote,.regional-form .formnote,.header-phone small{color:#52665b}.process article span,.g24-process article span{color:#376f2f}
