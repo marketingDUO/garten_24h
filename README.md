@@ -12,3 +12,4 @@ Benötigte GitHub-Actions-Secrets:
 - `HETZNER_USER`
 - `HETZNER_PASSWORD`
 - `HETZNER_PORT`
+

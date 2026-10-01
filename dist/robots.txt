@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://www.garten24h.de/sitemap.xml
