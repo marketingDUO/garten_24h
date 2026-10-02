@@ -186,3 +186,5 @@ const urls=['/','/bewaesserung','/Poolbau','/ladengeschaeft',...Object.keys(gene
 fs.writeFileSync(path.join(root,'sitemap.xml'),`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls.map(u=>`<url><loc>${origin}${u}</loc><changefreq>${u==='/news'?'weekly':u.includes('news-einzelseiten')?'monthly':'yearly'}</changefreq><priority>${u==='/'?'1.0':u.startsWith('/bewaesserungsanlage-')||u.startsWith('/poolbau-')?'0.7':'0.8'}</priority></url>`).join('')}</urlset>`);
 fs.writeFileSync(path.join(root,'robots.txt'),`User-agent: *\nAllow: /\nSitemap: ${origin}/sitemap.xml\n`);
 console.log(`Built ${urls.length} canonical pages for ${places.length} locations.`);
+
+await import('./tree-pages.mjs');
